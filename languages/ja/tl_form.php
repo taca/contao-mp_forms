@@ -12,9 +12,9 @@
 /**
  * Legends
  */
-$GLOBALS['TL_LANG']['tl_form']['mp_forms_legend'] = 'Multiple page forms';
+$GLOBALS['TL_LANG']['tl_form']['mp_forms_legend'] = '複数ページのフォーム';
 
 /**
  * Fields
  */
-$GLOBALS['TL_LANG']['tl_form']['mp_forms_getParam'] = ['GET parameter', 'You can optionally modify the used GET parameter here.'];
+$GLOBALS['TL_LANG']['tl_form']['mp_forms_getParam'] = ['GETパラメーター', 'GETに使用するパラメーターを変更できます。'];

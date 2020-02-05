@@ -12,4 +12,4 @@
 /**
  * Front end modules
  */
-$GLOBALS['TL_LANG']['FMD']['mp_form_steps'] = ['MPForms - Steps', 'Displays a step navigation for a given multipage form.'];
+$GLOBALS['TL_LANG']['FMD']['mp_form_steps'] = ['MPFormsの段階', '指定した複数ページのフォームのナビゲーションを表示'];
