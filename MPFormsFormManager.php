@@ -168,6 +168,36 @@ class MPFormsFormManager
     }
 
     /**
+     * Gets the url fragment for a given step
+     *
+     * @param int    $step
+     * @param string $mode ("next" or "back")
+     *
+     * @return string
+     */
+    public function getFragmentForStep($step, $mode)
+    {
+        if (!\in_array($mode, ['back', 'next'], true)) {
+            throw new \InvalidArgumentException('Mode must be either "back" or "next".');
+        }
+
+        $key = sprintf('mp_forms_%sFragment', $mode);
+
+        foreach ($this->getFieldsForStep($step) as $formField) {
+            if ($this->isPageBreak($formField) && '' !== $formField->{$key}) {
+
+                return $formField->{$key};
+            }
+        }
+
+        if ('' !== $this->formModel->{$key}) {
+            return $this->formModel->{$key};
+        }
+
+        return '';
+    }
+
+    /**
      * Gets the current step.
      *
      * @return int
@@ -254,6 +284,16 @@ class MPFormsFormManager
             $url = Url::addQueryString($this->getGetParam() . '=' . $step);
         }
 
+        if ($step > $this->getCurrentStep()) {
+            $fragment = $this->getFragmentForStep($step, 'next');
+        } else {
+            $fragment = $this->getFragmentForStep($this->getCurrentStep(), 'back');
+        }
+
+        if ($fragment) {
+            $url .= '#' . $fragment;
+        }
+
         return $url;
     }
 
@@ -273,9 +313,10 @@ class MPFormsFormManager
             // a certain directory, this check will return false and thus
             // we won't move anything.
             if (is_uploaded_file($file['tmp_name'])) {
-                $target = sprintf('%s/system/tmp/mp_forms_%s',
+                $target = sprintf('%s/system/tmp/mp_forms_%s.%s',
                     TL_ROOT,
-                    basename($file['tmp_name'])
+                    basename($file['tmp_name']),
+                    $this->guessFileExtension($file)
                 );
                 move_uploaded_file($file['tmp_name'], $target);
                 $files[$k]['tmp_name'] = $target;
@@ -575,11 +616,8 @@ class MPFormsFormManager
         }
 
         $i = 0;
-        $lastField = null;
         foreach ($this->formFieldModels as $formField) {
             $this->formFieldsPerStep[$i][] = $formField;
-
-            $lastField = $formField;
 
             if ($this->isPageBreak($formField)) {
                 // Set the name on the model, otherwise one has to enter it
@@ -589,11 +627,11 @@ class MPFormsFormManager
                 // Increase counter
                 $i++;
             }
-        }
 
-        // Ensure the very last form field is a pageswitch too
-        if (!$this->isPageBreak($lastField)) {
-            $this->isValidFormFieldCombination = false;
+            // If we have a regular submit form field, that's a misconfiguration
+            if ('submit' === $formField->type) {
+                $this->isValidFormFieldCombination = false;
+            }
         }
     }
 
@@ -639,5 +677,24 @@ class MPFormsFormManager
         $form = new stdClass();
         $form->form = $this->formModel->id;
         return new Form($form);
+    }
+
+    private function guessFileExtension(array $file)
+    {
+        $extension = 'unknown';
+
+        if (!isset($file['type'])) {
+            return $extension;
+        }
+
+        foreach ($GLOBALS['TL_MIME'] as $ext => $data) {
+            if ($data[0] === $file['type']) {
+                $extension = $ext;
+                break;
+
+            }
+        }
+
+        return $extension;
     }
 }
