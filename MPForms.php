@@ -71,6 +71,29 @@ class MPForms
     }
 
     /**
+     * Contao unsets $_POST unfortunately so we have to save them for later use for us.
+     */
+    public function savePostValues($objWidget, $formId, $data, Form $form)
+    {
+        if (!$_POST) {
+            return $objWidget;
+        }
+
+        $manager = new MPFormsFormManager($form->id);
+        $manager->setPostData($_POST);
+
+        foreach ($GLOBALS['TL_HOOKS']['validateFormField'] as $k => $callback) {
+
+            // Do not call ourselves recursively as we'd keep resetting our own data
+            if ('MPForms' === $callback[0]) {
+                unset($GLOBALS['TL_HOOKS']['validateFormField'][$k]);
+            }
+        }
+
+        return $objWidget;
+    }
+
+    /**
      * Loads the values from the session and adds it as default value to the
      * widget.
      *
